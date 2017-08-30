@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<!-- simple html sample -->
+<html>
+    <head>
+        <title>Reference Page</title>
+    </head>
+    <body style="text-align: center;    margin: 0;
+    padding: 0;">
+
+    	    <div style="vertical-align: middle; margin: 60px auto 40px auto;width: 430px; display: inline-block;">
+	            <div style="width: 350px;height: 212PX;padding: 40px 40px 10px 40px;" >
+
+	            <form name="myaction" onsubmit="loadXML(); return false;">
+	                <p ><b>Enter URL for Airlines List XML File</b></p>
+	                <input name="searchTxt" id="searchTxt" type="text" required  />
+	                <!-- type="url" -->
+	                <br>
+	               	<!-- <button  type="button" onclick="loadXML()" style="margin: 20px auto 10px auto;">Submit Query </button> -->
+	               	<input type="submit" style="margin: 20px auto 10px auto;"  value="Submit Query " >
+	            </form>
+ 
+	                
+	            </div> 
+	        </div>
+    	<script language="JavaScript1.2">
+
+			function loadXML() {
+				url = url_data_of(document.getElementById('searchTxt').value);
+				// console.log(url);
+
+				// var expression = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+				var expression = /[-a-zA-Z0-9@:%_\+.~#?&//=]{1,256}\.xml(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+				var re = new RegExp(expression);
+				if (!re.test(url)) {
+					alert("Please enter a valid XML URL(end with .xml file)");
+			    	return;
+				}
+
+		        if (window.XMLHttpRequest) { // code for IE7+, Firefox, Chrome, Opera, Safari
+		            xmlhttp = new XMLHttpRequest();
+		            // console.log("hhh");
+
+		        } else { // code for IE6, IE5
+		            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		        }
+
+		        xmlhttp.open("GET", url, false);
+		        xmlhttp.send();
+
+
+		        if(xmlhttp.readyState!=4||xmlhttp.status != 200){
+		        	alert("XML file does not exist");
+			    	return;		        	
+		        }
+
+		        x = xmlhttp.responseText; 
+		        var t = (new DOMParser()).parseFromString(x, "text/xml");
+		       	var p =  t.documentElement.getElementsByTagName('parsererror').length ;
+
+		       	if(t.documentElement.nodeName=="parsererror"){
+		       		// console.log("firefox"); xml parsererror in firefox
+		       		alert("Error in XML File");
+		       		return;
+		       	}
+		       	if(p>0){
+		       		// console.log("chrome");  xml parsererror in chrome
+		       		alert("Error in XML File");
+		       		return;
+		       	}
+
+		        
+		        xmlDoc = xmlhttp.responseXML;
+		        // double check the xml parseerror
+		        if(xmlDoc==null){
+		        	alert("Error in XML File");
+	       			return;
+		        }
+
+		        if(xmlDoc.getElementsByTagName("Row").length<=0){
+		        	alert("XML file Contains NO Airline Companie");
+		        	return;
+		        }
+
+			    if (window.ActiveXObject) //if IE, simply execute script (due to async prop).
+			    {
+			        if (xmlDoc.parseError.errorCode != 0) {
+			            var myErr = xmlDoc.parseError;
+			            generateError(xmlDoc);
+			            hWin = window.open("", "Error", "height=300,width=340");
+			            hWin.document.write(html_text);
+			        } else {
+			            generateHTML(xmlDoc);
+			            hWin = window.open("", "Assignment4", "height=500,width=1000");
+			            hWin.document.write(html_text);
+			        }
+			    } else //else if FF, execute script once XML object has loaded
+			    {
+			    	// 
+			        xmlDoc.onload = generateHTML(xmlDoc);
+			        hWin = window.open("", "Assignment4", "height=500,width=1000");
+			        hWin.document.write(html_text);
+			    }
+			    hWin.document.close();	
+			}
+
+
+			function data_of( txt )
+			{
+			  var data = txt;
+			  data = data.replace(/[\t\n\r ]+/g, " ");
+			  if (data.charAt(0) == " ")
+			    data = data.substring(1, data.length);
+
+			  if (data.charAt(data.length - 1) == " ")
+			    data = data.substring(0, data.length - 1);
+
+			  return data;
+			}	
+
+			function url_data_of( txt )
+			{
+			  var data = txt;
+			  data = data.replace(/[\t\n\r ]+/g, "");
+
+			  return data;
+			}
+
+
+		    function generateHTML(xmlDoc) {
+
+
+			    ELEMENT_NODE = 1; // MS parser doesn't define Node.ELEMENT_NODE
+			    root = xmlDoc.DocumentElement;
+			    html_text = "<html><head><title>XML Parse Result</title></head><body>";
+			    html_text += "<table border='2'>";
+
+			    Header = xmlDoc.getElementsByTagName("Header");
+			    headers = Header.item(0).childNodes;
+
+			    html_text += "<tr>";
+			    x = 130;
+			    y = 85;
+			    // output the headers
+
+			    for (i = 0; i < headers.length; i++) {
+			       if (headers.item(i).nodeType == ELEMENT_NODE) {
+			       		if(headers.item(i).childNodes.length >= 1){
+				            header = headers.item(i).firstChild.nodeValue;
+				            html_text += "<th>" + data_of(header) + "</th>";
+			        	} else{
+			        		html_text += "<th> </th>";
+			        	}
+			        }
+			    }
+			    html_text += "</tr>";
+
+			    planes = xmlDoc.getElementsByTagName("Row");
+			    // output out the values
+			    for (var i = 0; i < planes.length; i++) {
+			    	html_text += "<tr>"; //start a new row of the output table
+			      	if (planes[i].childNodes) {
+			         	for (var j = 0; j < planes[i].childNodes.length; j++) {
+
+				           	var detail = planes[i].childNodes[j];
+				           	
+				           	if (detail.nodeType == ELEMENT_NODE){
+				           		if(detail.childNodes.length >= 1){
+					           		if (detail.nodeName == "Plane") { //handle images separately
+					                    // html_text += "<td><img src = '"+data_of(detail.firstChild.nodeValue)+"' width = '"+x+"' height = '"+y+"' > </td>";
+					                    html_text += "<td><img src = '"+url_data_of(detail.firstChild.nodeValue)+"' width = '"+x+"' height = '"+y+"' > </td>";                    
+					                }else if (detail.nodeName == "Hubs") { //handle images separately
+					                	html_text += "<td><ul>";
+					                	var n=0;
+					                	for(var k =0; k< detail.childNodes.length;k++){
+					                		
+					                		if(detail.childNodes[k].nodeType == ELEMENT_NODE){
+					                			if(n == 0){
+					                				if(detail.childNodes[k].childNodes.length >= 1){
+						                				html_text += "<li><b>"+ data_of(detail.childNodes[k].firstChild.nodeValue)+"</b></li>"; 
+						                				
+					                				}else{
+					                					html_text += "<li><b> </b></li>"; 
+					                				}
+					                				
+					                				n++;
+					                			
+					                			}else{
+					                				if(detail.childNodes[k].childNodes.length >= 1){
+					                					html_text += "<li>"+ data_of(detail.childNodes[k].firstChild.nodeValue)+"</li>"; 
+					                				}else{
+					                					html_text += "<li> </li>"; 
+					                				}
+					                				
+					                			}
+					                		
+					                		}
+					                	}
+					                	html_text += "</ul></td>";					                			                   
+					                }else if(detail.nodeName == "Notes"){
+				           				html_text += "<td>" + data_of(detail.firstChild.nodeValue) + "</td>";						      
+					                }else if(detail.nodeName=="HomePage"){
+					                	console.log(detail.nodeName+":"+url_data_of(detail.firstChild.nodeValue));
+					                	html_text += "<td><a href = '"+ url_data_of(detail.firstChild.nodeValue) +"'>"+ url_data_of(detail.firstChild.nodeValue)+"</a></td>";
+					                }else {
+				                        html_text += "<td>" + data_of(detail.firstChild.nodeValue) + "</td>";
+				                        
+				                        // console.log("data: " +data_of(detail.firstChild.nodeValue));
+				                    }
+
+				                }else{
+				                	html_text += "<td> </td>";
+				                }
+
+			                }
+		            	}
+		            }
+			            	
+			        
+			        html_text += "</tr>";
+				  }
+		        html_text += "</table>";
+		        html_text += "</body></html>";
+			} 			
+       	</script>
+       	<nonscript>
+        
+    </body>
+</html>
+
